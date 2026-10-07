@@ -176,15 +176,37 @@ await check('every shared scene has a track, timings and attributed cues', () =>
   }
 })
 
-await check('every sprite state ships as a transparent PNG', () => {
+await check('every sprite state the client can ask for ships as a transparent PNG', () => {
   const dir = join(ROOT, 'assets', 'sprites')
   const files = readdirSync(dir)
-  for (const pose of ['idle', 'happy', 'talk', 'sleep', 'surprise', 'wave']) {
+  const poses = literal('POSES')
+  assert.ok(poses.length >= 14, 'the character has a real animation set, not a stub')
+  for (const required of ['idle', 'blink', 'walk1', 'walk2', 'talk', 'sleep']) {
+    assert.ok(poses.includes(required), 'the client can reach the ' + required + ' state')
+  }
+  for (const pose of poses) {
     const name = 'liangzi-' + pose + '.png'
     assert.ok(files.includes(name), name + ' ships')
     const bytes = readFileSync(join(dir, name))
     assert.ok(bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), name + ' is a PNG')
     assert.ok(bytes.includes(Buffer.from('tRNS')), name + ' carries an alpha channel')
+  }
+  assert.equal(files.filter((f) => f.endsWith('.png')).length, poses.length, 'no orphan sprites ship')
+})
+
+await check('every idle micro-scene references art and audio that ship', () => {
+  const acts = literal('IDLE_ACTS')
+  const poses = literal('POSES')
+  const lines = literal('LINES')
+  assert.ok(acts.length >= 4, 'the pet does several things on its own')
+  const voiceDir = join(ROOT, 'assets', 'voice')
+  for (const act of acts) {
+    assert.ok(poses.includes(act.pose), 'the ' + act.pose + ' act has a sprite')
+    assert.ok(typeof act.ms === 'number' && act.ms > 500, 'the ' + act.pose + ' act holds for a while')
+    if (act.line !== undefined) {
+      assert.ok(lines[act.line] !== undefined, act.line + ' is a scripted line')
+      assert.ok(existsSync(join(voiceDir, act.line + '.mp3')), act.line + '.mp3 ships')
+    }
   }
 })
 
@@ -210,6 +232,15 @@ await check('the plugin card icon is a small image inside the package', () => {
   assert.ok(!manifest.icon.includes('..'), 'the icon path stays inside the package')
   const bytes = readFileSync(join(ROOT, manifest.icon))
   assert.ok(bytes.length <= 256 * 1024, 'the icon is under the 256 KiB card limit')
+})
+
+await check('the client names the character, rather than a template placeholder', () => {
+  const name = /const PET_NAME = '([^']*)'/.exec(SOURCE)[1]
+  assert.ok(name.length > 0, 'the character has a display name')
+  assert.ok(!name.includes('{{'), 'the name was substituted at build time, not shipped raw')
+  assert.ok(!/\{\{[A-Z_]+\}\}/.test(SOURCE), 'no template placeholder survives in the client')
+  const label = /const LABEL = ([^\n]+)/.exec(SOURCE)[1]
+  assert.ok(label.includes('PET_NAME'), 'the accessible label is built from that name')
 })
 
 await check('the client never reaches for a Harness Client package', () => {

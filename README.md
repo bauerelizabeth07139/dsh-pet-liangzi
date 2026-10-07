@@ -1,19 +1,21 @@
-# {{PET_NAME}} · Desktop Pet · Liangzi Desktop Pet
+# 梁子 · Desktop Pet · Liangzi Desktop Pet
 
 [![dsh.so risk](https://www.dsh.so/badge/dsh-pet-liangzi.svg)](https://www.dsh.so/artifact/dsh-pet-liangzi/)
 
-A chibi **父亲** (father) that lives inside the DeepSeek Harness Web GUI. It stands on the
-bottom edge of the window, breathes, wanders about, can be picked up and dropped anywhere, says
-things out loud in Chinese with subtitles, and plays its own sound effects and background music.
+A **父亲** (father) that lives inside the DeepSeek Harness Web GUI. It stands on the
+bottom edge of the window, breathes, blinks, strolls about with a real two-frame step, can be picked
+up, thrown and dropped, turns to look at your pointer, does small things on its own, falls asleep if
+you ignore it, says things out loud in Chinese with subtitles, and plays its own sound effects and
+background music.
 
 Every sound it makes is on its own switch, and **every asset ships inside this package** — no
 network calls, no CDN, no build step, no external service.
 
 > DeepSeek 创始人的动漫化身，沉稳可靠的父亲。会走动、会说话、能拖动；和「大肥鱼」同时安装时，父女俩会打招呼、搭话，还能演一段小剧场。
 
-![{{PET_NAME}} — six drawn states](docs/states.png)
+![梁子 — every drawn state](docs/states.png)
 
-![{{PET_NAME}} and 大肥鱼 together](docs/family.png)
+![梁子 and 大肥鱼 together](docs/family.png)
 
 ---
 
@@ -21,8 +23,11 @@ network calls, no CDN, no build step, no external service.
 
 | | |
 |---|---|
-| **On-screen character** | Six hand-directed sprite states — idle, happy, talking, asleep, surprised, waving — drawn from the original {{PET_NAME}} artwork by image-to-image so the identity, outfit and palette stay exact. Idle breathing, talking mouth, hop, shake and a soft ground shadow are pure CSS. |
-| **Walks and can be dragged** | It strolls along the bottom edge on its own schedule, turns to face the way it is going, and follows your pointer when you pick it up. Where you drop it is where it stays, across reloads. |
+| **15 drawn states** | 包括待机、眨眼、迈步（前脚）、迈步（后脚）、开心、欢呼、说话、思考、比心、难过、生气、惊讶、睡觉、挥手、「嘘」的手势。 Every one is drawn from the original 梁子 artwork by image-to-image, so the face, outfit and palette stay exact — only the pose changes. |
+| **It moves like a character** | A two-frame **walk cycle** with the step timed to the distance it is covering, idle **breathing**, **blinking** on an irregular cadence, hop, sway, nod, shake and squash-and-stretch. All of it CSS on top of the sprites, all of it respecting `prefers-reduced-motion`. |
+| **Physics when you grab it** | Pick it up and it dangles against the direction you drag. Let go and it **falls under gravity**, lands with a squash and a spring, and throws a puff of sparkles if the drop was a long one. Its shadow shrinks and fades while it is in the air. |
+| **Small things on its own** | Left alone it will 思考、「嘘」的手势、欢呼、比心、生气。 Each of those is a pose, a line and sometimes a little burst of particles. |
+| **Reacts to you** | It turns to face your pointer when it comes near. Click it and it wakes up, reacts and says something. **Poke it three times quickly and it gets annoyed.** |
 | **Voiced dialogue** | Every line is pre-rendered speech, not a beep. Speaking shows the subtitle in a bubble and switches the sprite to its talking state for exactly as long as the line runs. |
 | **Sound effects** | Click, drag, greet, sparkle, heart, sleep and link cues, generated as one sound-effect group and picked per situation. |
 | **Background music** | A calm instrumental loop written for this character. It starts only when you turn it on, and pauses automatically while the tab is in the background. |
@@ -38,6 +43,7 @@ the little toolbar that appears when you hover the character.
 | 显示桌宠 | on | Hide the character without losing any setting |
 | 角色大小 / 不透明度 | 190px / 100% | How big and how assertive it is |
 | 自动走动 | on | Whether it strolls along the bottom edge |
+| 小动作 | on | Whether it fidgets, thinks, cheers and sulks on its own |
 | 对话气泡 | on | Subtitle bubble above its head |
 | 主动搭话 | on | Whether it speaks up on its own every so often |
 | **对话语音** + 音量 | on / 80% | The voiced lines |
@@ -143,15 +149,18 @@ curl http://127.0.0.1:19387/api/dsh-pet-liangzi/diag
 
 | Pet | Role | Repository |
 |---|---|---|
-| {{PET_NAME}} | 父亲 | this one |
+| 梁子 | 父亲 | this one |
 | 大肥鱼 | 女儿 | [dsh-pet-dafeiyu](https://github.com/bauerelizabeth07139/dsh-pet-dafeiyu) |
 
 Install both to get the family link. Each is complete and independent on its own.
 
 ## Credits and licence
 
-The character art is derived from the original {{PET_NAME}} artwork by image-to-image, so the
-design, outfit and palette are the source images' — this package only re-poses them. The voice,
-sound effects and music were generated through the SenseAudio API for this plugin.
+The character art is derived from the original 梁子 artwork by **image-to-image**, so the
+design, outfit and palette are the source images' — this package only re-poses them.
+
+梁子的立绘是从那张照片做图生图转绘的**写实**风格：三维渲染质感、真实发丝、布料褶皱与镜片反光，成年男性的六头身比例。他与大肥鱼**刻意不统一画风**——一个是写实的大人，一个是Q版的小孩。
+
+The voice, sound effects and music were generated through the SenseAudio API for this plugin.
 
 MIT — see [LICENSE](./LICENSE).

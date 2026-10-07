@@ -130,16 +130,17 @@ await check('PUT config clamps out-of-range values and persists valid JSON', asy
   const res = fakeRes()
   await route('exact', '/api/' + PKG + '/config')(
     fakeReq('PUT', '/api/' + PKG + '/config', {
-      body: { size: '9999', opacity: '1', bgmVolume: '-5', posY: '50', wander: 'maybe', extra: 'dropped' },
+      body: { size: '9999', opacity: '1', bgmVolume: '-5', posY: '50', wander: 'maybe', acts: 'nope', extra: 'dropped' },
     }),
     res,
   )
   assert.equal(res.status, 200)
   const cfg = res.json()
-  assert.equal(cfg.size, '420', 'size clamps to its maximum')
+  assert.equal(cfg.size, '460', 'size clamps to its maximum')
   assert.equal(cfg.opacity, '30', 'opacity clamps to its minimum')
   assert.equal(cfg.bgmVolume, '0')
   assert.equal(cfg.wander, 'true', 'an unknown boolean falls back to the default')
+  assert.equal(cfg.acts, 'true', 'the idle-acts switch defaults to on')
   assert.equal(cfg.extra, undefined, 'unknown fields are dropped')
 
   const onDisk = JSON.parse(readFileSync(join(HOME, 'dsh-pet-liangzi.json'), 'utf8'))
