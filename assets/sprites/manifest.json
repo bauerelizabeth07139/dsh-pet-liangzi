@@ -1,0 +1,38 @@
+{
+ "note": "Every pose is drawn in three-quarter view looking to the RIGHT. The renderer mirrors horizontally to face left.",
+ "defaultFacing": "right",
+ "order": [
+  "idle",
+  "blink",
+  "walk1",
+  "walk2",
+  "happy",
+  "cheer",
+  "talk",
+  "think",
+  "love",
+  "sad",
+  "angry",
+  "surprise",
+  "sleep",
+  "wave",
+  "shh"
+ ],
+ "faces": {
+  "idle": "right",
+  "blink": "right",
+  "walk1": "right",
+  "walk2": "right",
+  "happy": "right",
+  "cheer": "right",
+  "talk": "right",
+  "think": "right",
+  "love": "right",
+  "sad": "right",
+  "angry": "right",
+  "surprise": "right",
+  "sleep": "right",
+  "wave": "right",
+  "shh": "right"
+ }
+}

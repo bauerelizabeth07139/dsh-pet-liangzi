@@ -175,8 +175,13 @@ await check('every shipped sprite, voice line, effect, scene and track is served
     const res = await serve(handler, fakeReq('GET', '/api/' + PKG + '/asset/' + file))
     assert.equal(res.status, 200, file + ' is served')
     assert.ok(res.body().length > 0, file + ' is not empty')
+    // The sprite folder also carries a JSON manifest recording which way each
+    // pose faces; without this the content-type check below assumes anything
+    // that is not a PNG must be audio.
+    const want = file.endsWith('.png') ? 'image/png'
+      : (file.endsWith('.json') ? 'application/json' : 'audio/')
     assert.ok(
-      String(res.headers['content-type']).startsWith(file.endsWith('.png') ? 'image/png' : 'audio/'),
+      String(res.headers['content-type']).startsWith(want),
       file + ' has the right content type',
     )
   }
