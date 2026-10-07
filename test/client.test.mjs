@@ -153,7 +153,7 @@ await check('every situation group points at real lines', () => {
 await check('every shared scene has a track, timings and attributed cues', () => {
   const joint = literal('JOINT')
   const scenes = Object.keys(joint)
-  assert.equal(scenes.length, 3, 'three father-and-daughter scenes ship')
+  assert.ok(scenes.length >= 4, 'several father-and-daughter scenes ship (' + scenes.length + ')')
   const jointDir = join(ROOT, 'assets', 'joint')
   for (const scene of scenes) {
     assert.ok(existsSync(join(jointDir, scene + '.mp3')), scene + '.mp3 ships')
@@ -224,6 +224,32 @@ await check('the background track the client asks for ships', () => {
   const match = /const BGM_TRACK = '([^']+)'/.exec(SOURCE)
   assert.ok(match, 'the client names a background track')
   assert.ok(existsSync(join(ROOT, 'assets', 'bgm', match[1] + '.mp3')), match[1] + '.mp3 ships')
+})
+
+await check('the walk cycle is a real one, not two near-identical frames', () => {
+  const poses = literal('POSES')
+  for (const frame of ['walk1', 'walkpass', 'walk2']) {
+    assert.ok(poses.includes(frame), 'the ' + frame + ' frame ships')
+  }
+  const cycle = /const WALK_CYCLE = \[([^\]]+)\]/.exec(SOURCE)
+  assert.ok(cycle, 'the client declares a walk cycle')
+  const order = cycle[1].split(',').map((s) => s.trim().replace(/'/g, '')).filter(Boolean)
+  assert.deepEqual(order, ['walk1', 'walkpass', 'walk2', 'walkpass'],
+    'contact, pass, contact, pass — the pass frame is what stops the glide')
+  // Ground speed must be derived from the step cadence, never chosen freely.
+  assert.ok(/function walkSpeed\(\)/.test(SOURCE), 'ground speed is computed')
+  assert.ok(/STRIDE_RATIO/.test(SOURCE), 'it is computed from a stride length')
+  assert.ok(/walkDuration\(/.test(SOURCE), 'trip length is derived from that speed')
+})
+
+await check('the two pets can walk to each other and hand things over', () => {
+  for (const method of ['approach()', 'gift(kind)', 'partnerBounds()', 'walkToX(', 'facePartner()']) {
+    assert.ok(SOURCE.includes(method), 'the pet exposes ' + method)
+  }
+  assert.ok(SOURCE.includes("'family/approach'"), 'it asks its sibling to come over')
+  assert.ok(SOURCE.includes("'family/gesture'"), 'and it can hand something across')
+  // The bond line drawn towards the viewport centre was removed on request.
+  assert.ok(!SOURCE.includes('strokeDasharray'), 'no dashed line is drawn to the middle')
 })
 
 await check('the plugin card icon is a small image inside the package', () => {

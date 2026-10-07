@@ -23,15 +23,26 @@ network calls, no CDN, no build step, no external service.
 
 | | |
 |---|---|
-| **15 drawn states** | 包括待机、眨眼、迈步（前脚）、迈步（后脚）、开心、欢呼、说话、思考、比心、难过、生气、惊讶、睡觉、挥手、「嘘」的手势。 Every one is drawn from the original 梁子 artwork by image-to-image, so the face, outfit and palette stay exact — only the pose changes. |
-| **It moves like a character** | A two-frame **walk cycle** with the step timed to the distance it is covering, idle **breathing**, **blinking** on an irregular cadence, hop, sway, nod, shake and squash-and-stretch. All of it CSS on top of the sprites, all of it respecting `prefers-reduced-motion`. |
+| **16 drawn states** | 包括待机、眨眼、迈步（前脚）、迈步（过渡）、迈步（后脚）、开心、欢呼、说话、思考、比心、难过、生气、惊讶、睡觉、挥手、「嘘」的手势。 Every one is drawn from the original 梁子 artwork by image-to-image, so the face, outfit and palette stay exact — only the pose changes. |
+| **It moves like a character** | A real **three-frame walk cycle** — contact, pass, contact — whose ground speed is *derived from the step cadence* rather than chosen freely, so the feet match the floor instead of skating. Plus idle **breathing**, **blinking** on an irregular cadence, hop, sway, nod, shake and squash-and-stretch. All of it CSS on top of the sprites, all of it respecting `prefers-reduced-motion`. |
 | **Physics when you grab it** | Pick it up and it dangles against the direction you drag. Let go and it **falls under gravity**, lands with a squash and a spring, and throws a puff of sparkles if the drop was a long one. Its shadow shrinks and fades while it is in the air. |
 | **Small things on its own** | Left alone it will 思考、「嘘」的手势、欢呼、比心、生气。 Each of those is a pose, a line and sometimes a little burst of particles. |
 | **Reacts to you** | It turns to face your pointer when it comes near. Click it and it wakes up, reacts and says something. **Poke it three times quickly and it gets annoyed.** |
+| **Two pets, together** | With both installed they do more than talk: they **walk over to stand beside each other**, turn to face whoever is speaking, **hand each other things** (a bowl of rice one way, a heart back), and perform the playlets side by side rather than from opposite corners. |
 | **Voiced dialogue** | Every line is pre-rendered speech, not a beep. Speaking shows the subtitle in a bubble and switches the sprite to its talking state for exactly as long as the line runs. |
 | **Sound effects** | Click, drag, greet, sparkle, heart, sleep and link cues, generated as one sound-effect group and picked per situation. |
 | **Background music** | A calm instrumental loop written for this character. It starts only when you turn it on, and pauses automatically while the tab is in the background. |
-| **Family link** | When [大肥鱼](https://github.com/bauerelizabeth07139/dsh-pet-dafeiyu) is installed too, the two pets notice each other: they greet, call out to each other while you work, draw a dashed bond line between them, and can perform a **three-scene father-and-daughter playlet** with directed, alternating turns. |
+| **Family link** | When [大肥鱼](https://github.com/bauerelizabeth07139/dsh-pet-dafeiyu) is installed too, the two pets notice each other: they greet, call out to each other while you work, wander over to keep each other company, and can perform **six father-and-daughter playlets** with directed, alternating turns. |
+
+## The character
+
+**梁子**是社区给梁文锋起的称号，出自网友做的那个「**滑动变祖器**」——三十一档，从「小难梁」一路到「梁祖」，「梁子」正好是中间那一档；它同时谐音「结梁子」。
+
+他是**广东湛江吴川**人，父母都是镇上的小学老师，十七岁以高考状元进的浙大。所以这个插件里他讲的是**带广东口音的普通话**，语速偏慢、声音不高。他说的台词，绝大多数是他真的讲过的：「我们不是有意成为一条鲶鱼，只是不小心成了一条鲶鱼」「创新首先是一个信念问题。首先是敢」「所有的套路，都是上一代的产物」「一件激动人心的事，不能单纯用钱衡量。就像家里买钢琴」。他也提那个滑块，提「梁性循环」，提那年在吴川踢的那场球。
+
+他右手的姿势是那张照片里的「**嘘**」——这是他的标志动作，也是这个角色六种姿态之外多出来的那一种。
+
+> 梁子 is the community's nickname for DeepSeek's founder, taken from a fan-made "Liang intensity calibrator" with 31 levels — 梁子 is the middle one, and it is also a pun on 结梁子, "to make an enemy". He is from Wuchuan in Guangdong, so his lines are delivered in Cantonese-accented Mandarin, slowly and quietly. Most of what he says are things he actually said in interviews. The finger-to-the-lips gesture is the one from the reference photograph — his signature, and the reason he has one pose the other pet does not.
 
 ## The switches
 
