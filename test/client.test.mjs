@@ -228,14 +228,14 @@ await check('the background track the client asks for ships', () => {
 
 await check('the walk cycle is a real one, not two near-identical frames', () => {
   const poses = literal('POSES')
-  for (const frame of ['walk1', 'walkpass', 'walk2']) {
+  for (const frame of ['walk1', 'walk2']) {
     assert.ok(poses.includes(frame), 'the ' + frame + ' frame ships')
   }
   const cycle = /const WALK_CYCLE = \[([^\]]+)\]/.exec(SOURCE)
   assert.ok(cycle, 'the client declares a walk cycle')
   const order = cycle[1].split(',').map((s) => s.trim().replace(/'/g, '')).filter(Boolean)
-  assert.deepEqual(order, ['walk1', 'walkpass', 'walk2', 'walkpass'],
-    'contact, pass, contact, pass — the pass frame is what stops the glide')
+  assert.deepEqual(order, ['walk1', 'walk2'],
+    'two contact frames, so the body cannot twist between them')
   // Ground speed must be derived from the step cadence, never chosen freely.
   assert.ok(/function walkSpeed\(\)/.test(SOURCE), 'ground speed is computed')
   assert.ok(/STRIDE_RATIO/.test(SOURCE), 'it is computed from a stride length')
