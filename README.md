@@ -23,7 +23,7 @@ network calls, no CDN, no build step, no external service.
 
 | | |
 |---|---|
-| **15 drawn states** | 包括待机、眨眼、迈步（右脚在前）、迈步（左脚在前）、开心、欢呼、说话、思考、比心、难过、生气、惊讶、睡觉、挥手、「嘘」的手势。 Every one is drawn from the original 梁子 artwork by image-to-image, so the face, outfit and palette stay exact — only the pose changes. |
+| **16 drawn states** | 包括待机、眨眼、迈步（右脚在前）、walkpass、迈步（左脚在前）、开心、欢呼、说话、思考、比心、难过、生气、惊讶、睡觉、挥手、「嘘」的手势。 Every one is drawn from the original 梁子 artwork by image-to-image, so the face, outfit and palette stay exact — only the pose changes. |
 | **It moves like a character** | A real **three-frame walk cycle** — contact, pass, contact — whose ground speed is *derived from the step cadence* rather than chosen freely, so the feet match the floor instead of skating. Plus idle **breathing**, **blinking** on an irregular cadence, hop, sway, nod, shake and squash-and-stretch. All of it CSS on top of the sprites, all of it respecting `prefers-reduced-motion`. |
 | **Physics when you grab it** | Pick it up and it dangles against the direction you drag. Let go and it **falls under gravity**, lands with a squash and a spring, and throws a puff of sparkles if the drop was a long one. Its shadow shrinks and fades while it is in the air. |
 | **Small things on its own** | Left alone it will 思考、「嘘」的手势、欢呼、比心、生气。 Each of those is a pose, a line and sometimes a little burst of particles. |

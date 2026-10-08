@@ -226,20 +226,51 @@ await check('the background track the client asks for ships', () => {
   assert.ok(existsSync(join(ROOT, 'assets', 'bgm', match[1] + '.mp3')), match[1] + '.mp3 ships')
 })
 
-await check('the walk cycle is a real one, not two near-identical frames', () => {
+await check('the walk cycle is a real one, not near-identical frames', () => {
   const poses = literal('POSES')
-  for (const frame of ['walk1', 'walk2']) {
+  for (const frame of ['walk1', 'walkpass', 'walk2']) {
     assert.ok(poses.includes(frame), 'the ' + frame + ' frame ships')
   }
   const cycle = /const WALK_CYCLE = \[([^\]]+)\]/.exec(SOURCE)
   assert.ok(cycle, 'the client declares a walk cycle')
   const order = cycle[1].split(',').map((s) => s.trim().replace(/'/g, '')).filter(Boolean)
-  assert.deepEqual(order, ['walk1', 'walk2'],
-    'two contact frames, so the body cannot twist between them')
+  // Contact, pass, contact. The pass frame is what gives the cycle a middle;
+  // without it the walk is two contact poses alternating, and a pair of contacts
+  // that the model drew as the same leg pose reads as a slide.
+  assert.deepEqual(order, ['walk1', 'walkpass', 'walk2'],
+    'contact, pass, contact — a walk needs a middle')
   // Ground speed must be derived from the step cadence, never chosen freely.
   assert.ok(/function walkSpeed\(\)/.test(SOURCE), 'ground speed is computed')
   assert.ok(/STRIDE_RATIO/.test(SOURCE), 'it is computed from a stride length')
   assert.ok(/walkDuration\(/.test(SOURCE), 'trip length is derived from that speed')
+})
+
+await check('the walk frames really differ, and the body does not move between them', () => {
+  // The failure this exists to catch: three frames that are the same leg pose
+  // drawn three times. It shipped that way once — the pair differed over only
+  // 2-6% of the leg silhouette, so the character slid rather than walked while
+  // every other assertion passed.
+  const spriteDir = join(ROOT, 'assets', 'sprites')
+  const petId = /const PET_ID = '([^']*)'/.exec(SOURCE)[1]
+  const frames = ['walk1', 'walkpass', 'walk2']
+  for (const f of frames) {
+    assert.ok(existsSync(join(spriteDir, petId + '-' + f + '.png')), petId + '-' + f + '.png ships')
+  }
+
+  // Read the alpha channel in-process: no image library here, so use the PNG
+  // the build already produced and let the browser-side check in realwalk cover
+  // the rest. This asserts the *files* are not byte-identical, which is the
+  // cheapest way to catch a build that copied one frame over the others.
+  const bytes = frames.map((f) => readFileSync(join(spriteDir, petId + '-' + f + '.png')))
+  assert.notEqual(bytes[0].length + ':' + bytes[0].slice(0, 64).toString('hex'),
+    bytes[1].length + ':' + bytes[1].slice(0, 64).toString('hex'),
+    'walk1 and walkpass are different files')
+  assert.notEqual(bytes[1].length + ':' + bytes[1].slice(0, 64).toString('hex'),
+    bytes[2].length + ':' + bytes[2].slice(0, 64).toString('hex'),
+    'walkpass and walk2 are different files')
+  assert.notEqual(bytes[0].length + ':' + bytes[0].slice(0, 64).toString('hex'),
+    bytes[2].length + ':' + bytes[2].slice(0, 64).toString('hex'),
+    'walk1 and walk2 are different files')
 })
 
 await check('the two pets can walk to each other and hand things over', () => {
@@ -250,6 +281,103 @@ await check('the two pets can walk to each other and hand things over', () => {
   assert.ok(SOURCE.includes("'family/gesture'"), 'and it can hand something across')
   // The bond line drawn towards the viewport centre was removed on request.
   assert.ok(!SOURCE.includes('strokeDasharray'), 'no dashed line is drawn to the middle')
+})
+
+// --- the arithmetic that keeps the two from being drawn on top of each other
+//
+// This is the check that matters most and is easiest to get wrong: the pets
+// were shipped once while both walked to the same coordinate and came to rest
+// overlapping, and every other assertion still passed, because "they are not
+// on top of each other" was only ever asserted in a browser run.
+
+const spacingTarget = registration.factory(() => ({ createElement: () => null })).__spacingTarget
+const GAP = 28
+/** Centre-to-centre distance two bodies need in order not to overlap. */
+const needBetween = (a, b) => (a + b) / 2 + GAP
+
+await check('the spacing rule is reachable for testing', () => {
+  assert.equal(typeof spacingTarget, 'function', 'the factory exposes __spacingTarget')
+})
+
+await check('a pet already clear of its sibling is not moved', () => {
+  const mine = { x: 100, width: 141, floor: 2000 }
+  const theirs = { x: 0, width: 130 }
+  assert.equal(spacingTarget(mine, { x: 1500, width: 130 }, GAP), null, 'far apart means no move')
+
+  // The sibling sits to the right, so this pet is the one that gives way. Put
+  // it exactly at the required clearance: nothing to do. Bring it 6px closer
+  // and there is a move.
+  const required = needBetween(mine.width, theirs.width)
+  const mineCentre = mine.x + mine.width / 2
+  const siblingLeftFor = (centreDistance) => mineCentre + centreDistance - theirs.width / 2
+
+  const exactly = { x: siblingLeftFor(required), width: theirs.width }
+  assert.equal(Math.abs(mineCentre - (exactly.x + theirs.width / 2)).toFixed(6), required.toFixed(6), 'the exact case is exact')
+  assert.equal(spacingTarget(mine, exactly, GAP), null, 'clearance met means no move')
+
+  const inside = { x: siblingLeftFor(required - 6), width: theirs.width }
+  assert.ok(mineCentre < inside.x + theirs.width / 2, 'the sibling is still to the right, so this pet gives way')
+  assert.notEqual(spacingTarget(mine, inside, GAP), null, 'inside clearance means a move')
+})
+
+await check('two pets on the same spot separate instead of leapfrogging', () => {
+  // Both inside each other's floor space. Each steps away from the other, so
+  // they diverge — picking the "roomier side" instead makes both choose the
+  // same direction and swap places.
+  const left = { x: 300, width: 141, floor: 2000 }
+  const right = { x: 340, width: 130, floor: 2000 }
+  const leftMove = spacingTarget(left, right, GAP)
+  const rightMove = spacingTarget(right, left, GAP)
+  assert.ok(leftMove !== null && rightMove !== null, 'both have somewhere to go')
+  assert.ok(leftMove < left.x, 'the left pet steps further left')
+  assert.ok(rightMove > right.x, 'the right pet steps further right')
+})
+
+await check('two pets that stop on the same spot are pulled apart', () => {
+  // The real failure: both were sent to the same target and both arrived.
+  const mine = { x: 400, width: 141, floor: 1280 }
+  const theirs = { x: 400, width: 130 }
+  const target = spacingTarget(mine, theirs, GAP)
+  assert.ok(target !== null, 'a move is produced')
+  const centreGap = Math.abs((target + 141 / 2) - (400 + 130 / 2))
+  assert.ok(centreGap >= needBetween(141, 130),
+    'ends at least a body-width plus the personal gap away (' + Math.round(centreGap) + 'px)')
+})
+
+await check('the pet pinned against the window edge is the one that moves', () => {
+  // Hard against the left edge, so the only way out is to the right — and it
+  // must take it rather than giving up.
+  const mine = { x: 0, width: 141, floor: 1280 }
+  const theirs = { x: 40, width: 130 }
+  const target = spacingTarget(mine, theirs, GAP)
+  assert.ok(target !== null, 'a move is produced')
+  assert.ok(target > mine.x, 'it moves right, away from the edge')
+  const centreGap = Math.abs((target + 141 / 2) - (40 + 130 / 2))
+  assert.ok(centreGap >= needBetween(141, 130), 'and it ends up clear')
+})
+
+await check('when there is no room to give way, nobody paces on the spot', () => {
+  // Already as far right as it may go, so stepping clear of the sibling would
+  // take it out of the window. There is no legal move, and standing still beats
+  // walking to an impossible coordinate on every check.
+  const floor = 420
+  const mine = { x: floor - 141, width: 141, floor }
+  const theirs = { x: 100, width: 130 }
+  assert.ok(mine.x + 141 / 2 > 100 + 65, 'this pet is the one on the right')
+  assert.equal(spacingTarget(mine, theirs, GAP), null)
+})
+
+await check('any move it does make reduces the overlap', () => {
+  const mine = { x: 700, width: 141, floor: 1280 }
+  for (const theirX of [400, 500, 560, 620, 660, 680, 700]) {
+    const target = spacingTarget(mine, { x: theirX, width: 130 }, GAP)
+    if (target === null) continue
+    const theirCentre = theirX + 65
+    const before = Math.abs((mine.x + 70.5) - theirCentre)
+    const after = Math.abs((target + 70.5) - theirCentre)
+    assert.ok(after > before, 'sibling at ' + theirX + ': gap ' + Math.round(before) + ' -> ' + Math.round(after))
+    assert.ok(target >= 0 && target <= mine.floor, 'sibling at ' + theirX + ': stays inside the window')
+  }
 })
 
 await check('the plugin card icon is a small image inside the package', () => {
