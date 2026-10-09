@@ -3,7 +3,7 @@
 [![dsh.so risk](https://www.dsh.so/badge/dsh-pet-liangzi.svg)](https://www.dsh.so/artifact/dsh-pet-liangzi/)
 
 A **父亲** (father) that lives inside the DeepSeek Harness Web GUI. It stands on the
-bottom edge of the window, breathes, blinks, strolls about with a real two-frame step, can be picked
+bottom edge of the window, breathes, blinks, strolls about on a real three-frame walk cycle, can be picked
 up, thrown and dropped, turns to look at your pointer, does small things on its own, falls asleep if
 you ignore it, says things out loud in Chinese with subtitles, and plays its own sound effects and
 background music.
