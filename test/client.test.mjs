@@ -77,6 +77,29 @@ function literal(name) {
   return JSON.parse(match[1])
 }
 
+/**
+ * Read a constant that is an `Object.freeze({...})` rather than bare JSON.
+ *
+ * `literal()` above is deliberately strict — it parses JSON, so a constant that
+ * is not JSON fails loudly instead of being misread. `SPRITE_FACING` is wrapped
+ * in `Object.freeze`, so it needs its two fields pulled out by name.
+ */
+function frozenLiteral(name, fields) {
+  const match = new RegExp('^\\s*const ' + name + ' = Object\\.freeze\\(\\{([\\s\\S]*?)\\}\\)\\s*$', 'm')
+    .exec(SOURCE)
+  assert.ok(match, 'the module declares ' + name + ' as a frozen object')
+  const body = match[1]
+  const out = {}
+  for (const field of fields) {
+    const found = new RegExp('(?:^|,)\\s*' + field + '\\s*:\\s*(\\{[^}]*\\}|-?\\d+|' + "'[^']*')")
+      .exec(body)
+    assert.ok(found, name + ' declares ' + field)
+    const raw = found[1]
+    out[field] = raw.startsWith("'") ? raw.slice(1, -1) : JSON.parse(raw)
+  }
+  return out
+}
+
 console.log(PKG + ' client half')
 
 await check('registers under the package name the loader row expects', () => {
@@ -271,6 +294,50 @@ await check('the walk frames really differ, and the body does not move between t
   assert.notEqual(bytes[0].length + ':' + bytes[0].slice(0, 64).toString('hex'),
     bytes[2].length + ':' + bytes[2].slice(0, 64).toString('hex'),
     'walk1 and walk2 are different files')
+})
+
+// --- which way each pose is drawn, and therefore which way it must be mirrored
+//
+// The direction a drawing faces cannot be recovered from the file, so the build
+// writes it down twice: once in `assets/sprites/manifest.json`, next to the
+// images, and once in the client's `SPRITE_FACING`, which the renderer uses. If
+// those two ever disagree, the pet is drawn backwards on screen while both
+// files still look self-consistent — and a pet with one pose drawn facing left
+// inside a package that assumes everything faces right is exactly how that
+// happens. This is the assertion that ties the two records together.
+
+await check('every pose is drawn the way its manifest and the client both say', () => {
+  const sprite = JSON.parse(readFileSync(join(ROOT, 'assets', 'sprites', 'manifest.json'), 'utf8'))
+  const facing = frozenLiteral('SPRITE_FACING', ['default', 'faces'])
+  const poses = literal('POSES')
+  const mapped = facing.faces || {}
+  assert.ok(Object.keys(mapped).length > 0,
+    'the client records a direction per pose, not just one for the package')
+  for (const pose of poses) {
+    const declared = mapped[pose] ?? (facing.default === -1 ? 'left' : 'right')
+    const shipped = sprite.faces[pose] ?? sprite.defaultFacing
+    assert.equal(declared, shipped,
+      pose + ': the client says ' + declared + ', the manifest says ' + shipped)
+  }
+  assert.equal(sprite.order.length, poses.length, 'the manifest lists every shipped pose')
+})
+
+await check('a pose that is drawn facing left is declared as such, and mirrored to face right', () => {
+  const facing = frozenLiteral('SPRITE_FACING', ['default', 'faces'])
+  const left = Object.entries(facing.faces || {})
+    .filter(([, how]) => how === 'left').map(([pose]) => pose).sort()
+  if (left.length === 0) {
+    // Nothing to mirror the other way: the package is uniform, which is the
+    // simple case and needs no exemption.
+    assert.equal(facing.default, 1, 'a uniform package faces right by default')
+    return
+  }
+  // At least one pose is exempt from the default, so the renderer has to ask
+  // per pose — otherwise that pose is drawn facing the wrong way.
+  assert.ok(/function poseArtFacing\(/.test(SOURCE),
+    'the renderer resolves the direction per pose when the poses disagree')
+  assert.ok(/facingToFlip\(state\.facing, state\.pose\)/.test(SOURCE),
+    'and the renderer passes the pose in, rather than assuming the package default')
 })
 
 await check('the two pets can walk to each other and hand things over', () => {
