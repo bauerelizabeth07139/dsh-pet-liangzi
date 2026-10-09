@@ -119,6 +119,13 @@ locale/{en,zh}.json   the plugin-card title and description
 test/*.test.mjs       host and client checks, no browser needed
 ```
 
+**Which way the artwork faces** is recorded per pose, in `assets/sprites/manifest.json` and in the
+client's `SPRITE_FACING`, because the poses are separate drawings and can disagree: a resting pose
+drawn straight at the camera and a walk frame drawn in a three-quarter turn are not the same
+direction, and one number cannot describe both. The renderer mirrors each pose by its own direction,
+so the character always ends up looking the way the pointer — or its own path — asks for. Nothing in
+a PNG records its direction, so the two records are what keep the images and the code honest.
+
 **Host half.** Serves `GET/PUT /api/dsh-pet-liangzi/config` (written to `$DSH_HOME/dsh-pet-liangzi.json` with an
 atomic temp-and-rename), `GET /api/dsh-pet-liangzi/asset/<path>` for every sprite and sample — with byte
 ranges, because `<audio>` seeks — and a `diag` route the browser posts to. It also stamps the config
